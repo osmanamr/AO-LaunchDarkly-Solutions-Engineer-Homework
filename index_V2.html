@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1">
+    <title>LaunchDarkly AO Demo</title>
+    <!-- include the launchdarkly sdk-->
+    <script src="https://unpkg.com/launchdarkly-js-client-sdk@2"></script>
+  </head>
+  <body>
+      <table align=center border="5" style="align:center;border-color:#456700;" width=80% height=80px>
+        <tr><td colspan=2 align="center" style="background-color:black;"> <img src="LD_Logo.jpg"></td></tr>
+        <tr>
+          <td align=center>
+              <p><B>use this URL to test targeting on user #1 (Bob Seager):</B><BR><u>ADD FULL PATH TO THE FILE</u>?FName=Bob&LName=Seager&KID=Bob@seager.com&PK=61afa3ae2733330d65a4b2b1&FLG1=test-flag-1&FLG2=test-flag-2</p>
+              <p><B>use this URL to test targeting on user #2 (Bob Loblaw):</B><BR><u>ADD FULL PATH TO THE FILE</u>?FName=Bob&LName=Loblaw&KID=bob@example.com&PK=61afa3ae2733330d65a4b2b1&FLG1=test-flag-1&FLG2=test-flag-2</p>
+          </td>
+        </tr>
+        <tr align=center>
+          <td id="InfoFld">Loading....</td>
+        </tr>
+        <tr align=center>
+          <td id="DemoFld" align="center">
+            <B hidden id="feature1">this is feature number ONE and is showing based on the controlling attribute from the platform</B><BR><BR>
+            <B hidden id="feature2">this is feature number TWO and is showing based on the controlling attribute from the platform</B>
+          </td>
+        </tr>
+      </table>
+
+    <script>
+    //set the target user data
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const f_name = urlParams.get('FName');
+      const l_name = urlParams.get('LName');
+      const Key_id = urlParams.get('KID');
+      const PROJECT_KEY = urlParams.get('PK'); //'61afa3ae2733330d65a4b2b1'; //Change #1
+      const FLAG1 = urlParams.get('FLG1'); //'test-flag-1';//Change #2
+      const FLAG2 = urlParams.get('FLG2'); //'test-flag-2';//Change #2
+      //alert(f_name);
+      //alert(l_name);
+      //alert(Key_id);
+      var user = {
+        "firstName": f_name,
+        "lastName": l_name,
+        "key": Key_id,
+      };
+
+      //Initialize the Client (Production Key)
+      document.getElementById("InfoFld").innerHTML='Initializing Launch Darkly API...';
+      var ldclient = LDClient.initialize(PROJECT_KEY, user);
+
+      //sink for the callback
+      function render()
+      {
+        var shouldShow = ldclient.variation(FLAG1, false);
+        var shouldShow2 = ldclient.variation(FLAG2, false);
+        //alert(shouldShow2);
+        var label = (shouldShow?'We <b style="color:green;">ACTIVATED</b>':'We <b style="color:red;">DEACTIVATED</b>') + " the feature #1 to " + user.firstName + " " + user.lastName + "<BR><BR>";
+        var label2 = (shouldShow2?'We <b style="color:green;">ACTIVATED</b>':'We <b style="color:red;">DEACTIVATED</b>') + " the feature #2 to " + user.firstName + " " + user.lastName + "<BR>";
+        document.getElementById("InfoFld").innerHTML=label + label2;
+        document.getElementById("feature1").hidden = !shouldShow;
+        document.getElementById("feature2").hidden = !shouldShow2;
+      }
+
+      // Subscribe to the the event stream
+      ldclient.on('ready', render);
+      ldclient.on('change', render);
+
+    </script>
+
+
+
+  </body>
+</html>
